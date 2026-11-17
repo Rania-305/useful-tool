@@ -1,0 +1,314 @@
+/* Pixel display font for titles only (DESIGN.md → Typography).
+   Stored in this repo (fonts/), not loaded from a CDN. License: fonts/OFL.txt */
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("fonts/PressStart2P-latin.woff2") format("woff2");
+  font-display: swap;
+}
+
+/* ============================================================
+   TOKENS — every value here comes from DESIGN.md
+   ============================================================ */
+:root {
+  --bg-track: #0d0d0d;
+  --bg-panel: #161616;
+  --border-flag: #2b2b2b;
+  --accent-red: #e10600;
+  --accent-yellow: #f6c90e;
+  --accent-green: #17c964;
+  --text-primary: #f5f5f5;
+  --text-muted: #9a9a9a;
+  --checkered-black: #000000;
+  --checkered-white: #ffffff;
+
+  --font-pixel: "Press Start 2P", monospace;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+
+  /* Spacing scale: 4 / 8 / 16 / 24 / 32 / 48 */
+  --s1: 4px; --s2: 8px; --s3: 16px; --s4: 24px; --s5: 32px; --s6: 48px;
+
+  --t-hover: 200ms ease;
+  --t-section: 400ms ease;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg-track);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--s3);
+  line-height: 1.5;
+}
+
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 var(--s3); }
+
+/* Checkered flag pattern, reused for dividers and the section wipe */
+.checkered {
+  height: var(--s3);
+  background-color: var(--checkered-white);
+  background-image: repeating-conic-gradient(var(--checkered-black) 0 25%, var(--checkered-white) 0 50%);
+  background-size: var(--s3) var(--s3);
+}
+
+/* Pixel car (inline SVG) part colors */
+.px-body   { fill: var(--accent-red); }
+.px-stripe { fill: var(--checkered-white); }
+.px-helmet { fill: var(--accent-yellow); }
+.px-wheel  { fill: var(--text-muted); }
+.px-hub    { fill: var(--checkered-black); }
+.car { display: block; shape-rendering: crispEdges; }
+
+/* ============================================================
+   1. HERO
+   ============================================================ */
+.hero { padding-top: var(--s6); }
+.hero h1 {
+  font-family: var(--font-pixel);
+  font-size: var(--s4);
+  line-height: 1.4;
+  margin: 0 0 var(--s3);
+}
+.hero h1 .red { color: var(--accent-red); }
+.hero p { color: var(--text-muted); margin: 0 0 var(--s4); }
+
+.hero-strip {
+  position: relative;
+  height: var(--s6);
+  overflow: hidden;
+  border-top: 1px solid var(--border-flag);
+}
+.hero-strip .car {
+  position: absolute;
+  bottom: var(--s2);
+  width: var(--s6);
+  animation: drive-across 4s linear infinite;
+}
+/* Faster while something is loading (DESIGN: car animates during loading) */
+body.is-busy .hero-strip .car { animation-duration: 1.6s; }
+
+@keyframes drive-across {
+  from { left: calc(-1 * var(--s6)); }
+  to   { left: 100%; }
+}
+
+/* ============================================================
+   2. CONTROLS
+   ============================================================ */
+.controls {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--s3);
+  align-items: end;
+  padding: var(--s5) 0 var(--s4);
+}
+.controls > * { min-width: 0; } /* stop long option text from widening the page on phones */
+.field-label {
+  display: block;
+  color: var(--text-muted);
+  margin-bottom: var(--s2);
+}
+
+select, button {
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-flag);
+  padding: var(--s2) var(--s3);
+  min-height: var(--s6);
+  border-radius: 0;
+  transition: border-color var(--t-hover), color var(--t-hover), background var(--t-hover);
+}
+select { width: 100%; }
+select:hover:not(:disabled), button:hover:not(:disabled) { border-color: var(--accent-yellow); }
+select:focus-visible, button:focus-visible, input:focus-visible + .chip, a:focus-visible {
+  outline: var(--s1) solid var(--accent-yellow);
+  outline-offset: 0;
+}
+select:disabled, button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Shimmer while the race list loads */
+select.is-shimmer {
+  background: linear-gradient(90deg, var(--bg-panel) 0%, var(--border-flag) 50%, var(--bg-panel) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: 0 0; } }
+
+.is-error-outline { border-color: var(--accent-red) !important; }
+.helper-error { color: var(--accent-red); margin: var(--s2) 0 0; }
+
+.btn-primary { border-color: var(--accent-red); }
+.btn-primary:not(:disabled) { background: var(--accent-red); }
+.btn-primary:hover:not(:disabled) { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+.btn-primary.is-retry { background: var(--bg-panel); border-color: var(--accent-red); }
+
+/* Small square spinner shown inside the Compare button while loading */
+.spinner {
+  display: none;
+  width: var(--s2); height: var(--s2);
+  margin-right: var(--s2);
+  background: var(--accent-yellow);
+  animation: spin 0.8s steps(4) infinite;
+}
+body.is-busy .spinner { display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.flash { animation: flash-red 400ms ease 1; }
+@keyframes flash-red { 0%, 100% { border-color: var(--border-flag); } 50% { border-color: var(--accent-red); } }
+
+/* Driver picker: checkbox list styled as chips */
+.drivers {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border-flag);
+  background: var(--bg-panel);
+  margin: 0;
+  padding: var(--s3);
+  min-width: 0;
+}
+.drivers legend { color: var(--text-muted); padding: 0 var(--s2); }
+.drivers .count { color: var(--text-muted); margin: 0 0 var(--s3); }
+.drivers .count .dot {
+  display: inline-block;
+  width: var(--s2); height: var(--s2);
+  margin-right: var(--s2);
+  background: var(--text-muted);
+}
+.drivers .count.is-valid .dot { background: var(--accent-green); }
+.chip-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--s2);
+}
+.chip-list input { position: absolute; opacity: 0; pointer-events: none; }
+.chip {
+  display: flex; gap: var(--s2); align-items: baseline;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--border-flag);
+  cursor: pointer;
+  transition: border-color var(--t-hover);
+}
+.chip:hover { border-color: var(--accent-yellow); }
+.chip .num { color: var(--text-muted); }
+.chip .team { color: var(--text-muted); margin-left: auto; text-align: right; }
+input:checked + .chip { border-color: var(--accent-red); background: var(--bg-track); }
+input:checked + .chip .num { color: var(--accent-red); }
+input:disabled + .chip { opacity: 0.4; cursor: not-allowed; }
+.placeholder { color: var(--text-muted); margin: 0; }
+
+.input-msg { grid-column: 1 / -1; color: var(--accent-red); margin: 0; min-height: 1.5em; }
+
+/* ============================================================
+   3. COMPARISON PANEL
+   ============================================================ */
+.panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-flag);
+  padding: var(--s4);
+  margin-bottom: var(--s6);
+}
+/* Checkered-flag wipe used for section transitions (400ms) */
+.panel::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-color: var(--checkered-white);
+  background-image: repeating-conic-gradient(var(--checkered-black) 0 25%, var(--checkered-white) 0 50%);
+  background-size: var(--s4) var(--s4);
+  transform: translateX(-101%);
+  pointer-events: none;
+}
+.panel.wipe::after { animation: wipe var(--t-section); }
+@keyframes wipe { from { transform: translateX(-101%); } to { transform: translateX(101%); } }
+
+/* Track graphic: a lane with a start line and two cars */
+.stage {
+  position: relative;
+  height: var(--s6);
+  background: var(--bg-track);
+  border-top: 1px solid var(--border-flag);
+  border-bottom: 1px solid var(--border-flag);
+  overflow: hidden;
+}
+.stage::before { /* checkered start/finish line */
+  content: "";
+  position: absolute; top: 0; bottom: 0; right: var(--s6);
+  width: var(--s2);
+  background-color: var(--checkered-white);
+  background-image: repeating-conic-gradient(var(--checkered-black) 0 25%, var(--checkered-white) 0 50%);
+  background-size: var(--s2) var(--s2);
+}
+.stage .car { position: absolute; width: var(--s5); transition: left var(--t-section); }
+.stage .car-a { top: var(--s1); }
+.stage .car-b { bottom: var(--s1); }
+.smoke { position: absolute; display: none; width: var(--s2); height: var(--s2); background: var(--text-muted); }
+
+/* Empty: parked behind the line */
+.panel[data-view="empty"] .car-a { left: var(--s3); }
+.panel[data-view="empty"] .car-b { left: var(--s6); }
+/* Loading: both cars lap the lane */
+.panel[data-view="loading"] .car { animation: drive-across 1.6s linear infinite; }
+.panel[data-view="loading"] .car-b { animation-delay: -0.8s; }
+/* Error: car A spun out mid-lane with smoke; car B stopped behind it */
+.panel[data-view="error"] .car-a { left: 45%; transform: rotate(-24deg); }
+.panel[data-view="error"] .car-b { left: var(--s3); }
+.panel[data-view="error"] .smoke { display: block; animation: smoke 1.2s steps(4) infinite; }
+.panel[data-view="error"] .smoke-1 { left: calc(45% - var(--s2)); top: var(--s2); }
+.panel[data-view="error"] .smoke-2 { left: calc(45% - var(--s3)); top: var(--s3); animation-delay: -0.6s; }
+@keyframes smoke { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(calc(-1 * var(--s3))); } }
+/* In use: cars parked past the finish line */
+.panel[data-view="inuse"] .car-a { left: calc(100% - var(--s5)); }
+.panel[data-view="inuse"] .car-b { left: calc(100% - var(--s5)); }
+
+.caption { margin: var(--s3) 0 0; color: var(--text-muted); }
+.panel[data-view="error"] .caption { color: var(--accent-red); }
+
+.results { margin-top: var(--s4); }
+.results[hidden] { display: none; }
+.method { color: var(--text-muted); margin: 0 0 var(--s3); }
+.partial-note { border-left: var(--s1) solid var(--accent-yellow); padding-left: var(--s3); margin: 0 0 var(--s3); }
+
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+th, td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--border-flag); }
+th { color: var(--text-muted); font-weight: normal; text-transform: uppercase; }
+td.num, th.num { text-align: right; }
+td.rank { font-family: var(--font-pixel); color: var(--accent-red); }
+td .team { color: var(--text-muted); display: block; }
+.muted { color: var(--text-muted); }
+.row-btn { min-height: 0; padding: var(--s1) var(--s2); }
+
+.lap-detail td { background: var(--bg-track); white-space: normal; }
+.lap-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--s1) var(--s3);
+}
+.lap-grid .excluded { color: var(--text-muted); text-decoration: line-through; }
+.lap-grid .why { text-decoration: none; display: inline-block; margin-left: var(--s1); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer { padding: var(--s4) 0 var(--s6); color: var(--text-muted); }
+footer a { color: var(--text-primary); transition: color var(--t-hover); }
+footer a:hover { color: var(--accent-yellow); }
+
+/* ============================================================
+   PHONE: single column, full-width controls, smaller/slower car
+   ============================================================ */
+@media (max-width: 640px) {
+  .hero { padding-top: var(--s5); }
+  .hero h1 { font-size: var(--s3); }
+  .controls { grid-template-columns: 1fr; }
+  .controls button { width: 100%; }
+  .hero-strip .car { width: var(--s5); animation-duration: 6s; }
+  .panel { padding: var(--s3); }
+  .chip-list { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
