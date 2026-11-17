@@ -53,7 +53,8 @@ body {
 }
 
 /* Pixel car (inline SVG) part colors */
-.px-body   { fill: var(--accent-red); }
+/* --team (OpenF1 team_colour) tints mock-race cars; every other car stays red */
+.px-body   { fill: var(--team, var(--accent-red)); }
 .px-stripe { fill: var(--checkered-white); }
 .px-helmet { fill: var(--accent-yellow); }
 .px-wheel  { fill: var(--text-muted); }
@@ -79,30 +80,49 @@ body {
   overflow: hidden;
   border-top: 1px solid var(--border-flag);
 }
+/* Dashed lane divider that scrolls backwards, so the strip feels fast */
+.hero-strip .lane-line {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(50% - var(--s1) / 2);
+  height: var(--s1);
+  background-image: linear-gradient(90deg, var(--border-flag) 0 50%, transparent 0 100%);
+  background-size: var(--s5) var(--s1);
+  animation: lane-scroll 0.65s linear infinite;
+}
+@keyframes lane-scroll { to { background-position: calc(-1 * var(--s5)) 0; } }
+
+/* The pack: each car sets its own lane, speed (--dur), start offset (--delay) and body colour (--team).
+   Body colours use DESIGN tokens only. Negative delays put cars mid-strip on page load. */
 .hero-strip .car {
   position: absolute;
-  bottom: var(--s2);
-  width: var(--s6);
-  animation: drive-across 4s linear infinite;
+  width: var(--s5);
+  animation: drive-across var(--dur, 4s) linear var(--delay, 0s) infinite;
 }
-/* Faster while something is loading (DESIGN: car animates during loading) */
-body.is-busy .hero-strip .car { animation-duration: 1.6s; }
+.hero-strip .car-1 { top: var(--s1);    --dur: 5.2s; --delay: -0.6s; }
+.hero-strip .car-2 { top: var(--s1);    --dur: 7.0s; --delay: -4.2s; --team: var(--accent-green); }
+.hero-strip .car-3 { bottom: var(--s1); --dur: 4.6s; --delay: -2.0s; --team: var(--accent-yellow); }
+.hero-strip .car-4 { bottom: var(--s1); --dur: 6.2s; --delay: -5.0s; }
+.hero-strip .car-5 { bottom: var(--s1); --dur: 8.0s; --delay: -1.4s; --team: var(--text-primary); }
+
+/* Whole pack speeds up while something is loading (DESIGN: cars animate during loading) */
+body.is-busy .hero-strip .car { animation-duration: calc(var(--dur, 4s) * 0.45); }
+body.is-busy .hero-strip .lane-line { animation-duration: 0.15s; }
 
 @keyframes drive-across {
   from { left: calc(-1 * var(--s6)); }
   to   { left: 100%; }
 }
-
 /* ============================================================
    2. CONTROLS
    ============================================================ */
 .controls {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr;
   gap: var(--s3);
-  align-items: end;
   padding: var(--s5) 0 var(--s4);
 }
+.actions { display: flex; gap: var(--s3); }
 .controls > * { min-width: 0; } /* stop long option text from widening the page on phones */
 .field-label {
   display: block;
@@ -167,8 +187,27 @@ body.is-busy .spinner { display: inline-block; }
   padding: var(--s3);
   min-width: 0;
 }
-.drivers legend { color: var(--text-muted); padding: 0 var(--s2); }
-.drivers .count { color: var(--text-muted); margin: 0 0 var(--s3); }
+.drivers[hidden] { display: none; }
+/* float + full width keeps the legend inside the box instead of sitting on the top border */
+.drivers legend { float: left; width: 100%; padding: 0; margin: 0 0 var(--s2); color: var(--text-primary); }
+.driver-bar {
+  clear: both;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: var(--s3);
+  margin: 0 0 var(--s3);
+}
+.drivers .count { color: var(--text-muted); margin: 0; }
+/* Text-style button (Clear drivers): keeps a tappable area without looking like a primary action */
+.link-btn {
+  min-height: 0;
+  padding: var(--s2) 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-btn:hover:not(:disabled) { color: var(--accent-yellow); }
 .drivers .count .dot {
   display: inline-block;
   width: var(--s2); height: var(--s2);
@@ -196,9 +235,8 @@ body.is-busy .spinner { display: inline-block; }
 input:checked + .chip { border-color: var(--accent-red); background: var(--bg-track); }
 input:checked + .chip .num { color: var(--accent-red); }
 input:disabled + .chip { opacity: 0.4; cursor: not-allowed; }
-.placeholder { color: var(--text-muted); margin: 0; }
-
-.input-msg { grid-column: 1 / -1; color: var(--accent-red); margin: 0; min-height: 1.5em; }
+.input-msg { grid-column: 1 / -1; color: var(--accent-red); margin: 0; }
+.input-msg:empty { display: none; } /* no blank row pushing the panel down */
 
 /* ============================================================
    3. COMPARISON PANEL
@@ -271,11 +309,60 @@ input:disabled + .chip { opacity: 0.4; cursor: not-allowed; }
 .method { color: var(--text-muted); margin: 0 0 var(--s3); }
 .partial-note { border-left: var(--s1) solid var(--accent-yellow); padding-left: var(--s3); margin: 0 0 var(--s3); }
 
+/* Side-by-side driver cards: one column per selected driver (2–6), set from JS as --cards */
+.driver-cards {
+  list-style: none; margin: 0 0 var(--s3); padding: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cards, 2), minmax(0, 1fr));
+  gap: var(--s3);
+}
+.driver-card {
+  position: relative;
+  min-width: 0;
+  background: var(--bg-track);
+  border: 1px solid var(--border-flag);
+  padding: var(--s3);
+}
+.driver-card.is-fastest { border-color: var(--accent-red); }
+/* Team theming: --team is OpenF1's team_colour, set per card from JS.
+   Tint stays dark (18% mix) so --text-primary/--text-muted remain readable. */
+.driver-card.has-team {
+  background: color-mix(in srgb, var(--team) 18%, var(--bg-track));
+  border-left: 4px solid var(--team);
+}
+.card-rank {
+  position: absolute; top: var(--s2); left: var(--s2);
+  font-family: var(--font-pixel);
+  color: var(--accent-red);
+}
+.driver-card .photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  object-position: bottom;
+  border-bottom: 1px solid var(--border-flag);
+  margin-bottom: var(--s2);
+}
+.photo-missing {
+  display: grid !important; place-items: center;
+  font-family: var(--font-pixel);
+  color: var(--text-muted);
+}
+.card-name { margin: 0; overflow-wrap: anywhere; }
+.driver-card .team { color: var(--text-muted); margin: 0 0 var(--s2); overflow-wrap: anywhere; }
+.driver-card dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s1) var(--s2); margin: 0; }
+.driver-card dt { color: var(--text-muted); }
+.driver-card dd { margin: 0; text-align: right; }
+
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; white-space: nowrap; }
 th, td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--border-flag); }
 th { color: var(--text-muted); font-weight: normal; text-transform: uppercase; }
 td.num, th.num { text-align: right; }
+/* Gap bar: length = this driver's gap ÷ the largest gap in the comparison (decorative; the number is the data) */
+.gap-bar { display: block; height: var(--s1); margin-top: var(--s1); background: var(--border-flag); }
+.gap-fill { display: block; height: 100%; background: var(--text-muted); }
 td.rank { font-family: var(--font-pixel); color: var(--accent-red); }
 td .team { color: var(--text-muted); display: block; }
 .muted { color: var(--text-muted); }
@@ -288,6 +375,45 @@ td .team { color: var(--text-muted); display: block; }
 }
 .lap-grid .excluded { color: var(--text-muted); text-decoration: line-through; }
 .lap-grid .why { text-decoration: none; display: inline-block; margin-left: var(--s1); }
+/* Tyre letter: existing tokens only — DESIGN.md has no tyre-compound colours yet */
+.lap-grid .tyre {
+  display: inline-block; min-width: var(--s4); text-align: center;
+  border: 1px solid var(--border-flag); color: var(--text-muted);
+}
+.stint-list { list-style: none; margin: 0 0 var(--s3); padding: 0; color: var(--text-muted); }
+.stint-list li + li { margin-top: var(--s1); }
+
+/* ============================================================
+   MOCK RACE (bottom of the results)
+   ============================================================ */
+.mock-race { margin-top: var(--s5); }
+.mock-race[hidden] { display: none; }
+.mock-race h2 {
+  font-family: var(--font-pixel);
+  font-size: var(--s3);
+  margin: 0 0 var(--s3);
+}
+.race-track {
+  background: var(--bg-track);
+  border: 1px solid var(--border-flag);
+  padding: var(--s2);
+}
+/* Height cap = 10 × --s6 so tall circuits don't push the legend off screen */
+.race-track svg { display: block; width: 100%; max-height: calc(var(--s6) * 10); }
+/* Track drawing units come from the SVG viewBox (1000 across), not CSS px */
+.tarmac { fill: none; stroke: var(--border-flag); stroke-width: 34; stroke-linejoin: round; }
+.finish-white { stroke: var(--checkered-white); stroke-width: 8; }
+.finish-black { stroke: var(--checkered-black); stroke-width: 8; stroke-dasharray: 8 8; }
+.race-car { shape-rendering: crispEdges; }
+.race-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: var(--s3);
+  margin: var(--s3) 0;
+}
+.race-lap { margin: 0; font-family: var(--font-pixel); color: var(--accent-yellow); }
+.race-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.race-legend li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); }
+.legend-car { width: var(--s5); flex: none; }
 
 /* ============================================================
    FOOTER
@@ -302,11 +428,14 @@ footer a:hover { color: var(--accent-yellow); }
 @media (max-width: 640px) {
   .hero { padding-top: var(--s5); }
   .hero h1 { font-size: var(--s3); }
-  .controls { grid-template-columns: 1fr; }
-  .controls button { width: 100%; }
-  .hero-strip .car { width: var(--s5); animation-duration: 6s; }
+  .actions { flex-direction: column; }
+  .actions button { width: 100%; }
+  /* Phone: smaller, slower cars and only three of them, to stay smooth and uncluttered */
+  .hero-strip .car { width: var(--s4); animation-duration: calc(var(--dur, 4s) * 1.5); }
+  .hero-strip .car-4, .hero-strip .car-5 { display: none; }
   .panel { padding: var(--s3); }
   .chip-list { grid-template-columns: 1fr; }
+  .driver-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

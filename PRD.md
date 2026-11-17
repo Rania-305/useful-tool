@@ -14,6 +14,7 @@ Let an F1 fan compare the race pace of multiple drivers within a single 2025 Gra
 3. **Compare action** — a "Compare" button/step that validates the selection and triggers the lap-time fetch and calculation.
 4. **Ranked comparison view** — side-by-side cards or table showing each selected driver's average race lap time for that session, sorted fastest to slowest.
 5. **Decorative track/car graphic** — a CSS/SVG track with pixel-car icons whose animation reflects the current UI state (idle, driving, crashed) per the States section below.
+6. **Mock race** — at the bottom of the comparison results, a simulated race with one pixel car per selected driver, tinted with the team colour. Each car laps at its driver's fastest counted lap from that race (10 laps, sped up 15×), on the real circuit outline traced from one lap of OpenF1 `/location` data (falls back to a generic oval, with a note, if that request fails). Labeled as a simulation, not a replay.
 
 ## Content and data (have / missing / from whom)
 | Item | Status | From whom |
@@ -22,6 +23,7 @@ Let an F1 fan compare the race pace of multiple drivers within a single 2025 Gra
 | Race sessions per meeting (`/sessions`, `session_type=Race`) | Have — live from OpenF1 | OpenF1 API |
 | Drivers per session (`/drivers?session_key=...`): `driver_number`, `full_name`, `team_name` | Have — live from OpenF1 | OpenF1 API |
 | Lap times per driver per session (`/laps`), excluding `is_pit_out_lap: true` | Have — live from OpenF1 | OpenF1 API |
+| Track outline for the mock race (`/location`, one driver, one lap window via `date>=` / `date<=`, ~300 points) | Have — live from OpenF1 | OpenF1 API |
 | Exact course due date | **Missing** — recorded as 11/8/2026, which is already past relative to today (11/9/2026); confirmed by student as correct but needs re-verification | Student |
 | Pixel car/track art assets | **Missing** — no asset source chosen yet | Student to provide or confirm hand-drawn/CSS-only approach |
 
@@ -53,7 +55,7 @@ A user must be able to:
 - Typed/free-text search for races or drivers (selection is dropdown/checkbox only).
 - Season-wide or multi-race aggregated stats (all calculations are scoped to one race session).
 - Practice, Qualifying, and Sprint session lap times (only the Race session is used).
-- Real car telemetry/position data driving the track graphic (it is decorative/state-driven only).
+- Real car telemetry/position data driving car positions. (The state graphic is decorative. The mock race uses `/location` only to draw the track outline; car speed comes from each driver's fastest lap time, not from live positions.)
 - Any backend, database, authentication, or payment flow.
 
 ## Later

@@ -29,10 +29,16 @@
   <header class="hero">
     <div class="wrap">
       <h1>F1 <span class="red">PACE</span> COMPARE</h1>
-      <p>Compare drivers' average race lap times, side by side, one 2025 Grand Prix at a time.</p>
+      <p>Compare drivers' average lap times in any 2025 Grand Prix.</p>
     </div>
+    <!-- Decorative pack of cars on two lanes; different speeds make them overtake each other -->
     <div class="hero-strip" aria-hidden="true">
-      <svg class="car" viewBox="0 0 16 7"><use href="#car"/></svg>
+      <div class="lane-line"></div>
+      <svg class="car car-1" viewBox="0 0 16 7"><use href="#car"/></svg>
+      <svg class="car car-2" viewBox="0 0 16 7"><use href="#car"/></svg>
+      <svg class="car car-3" viewBox="0 0 16 7"><use href="#car"/></svg>
+      <svg class="car car-4" viewBox="0 0 16 7"><use href="#car"/></svg>
+      <svg class="car car-5" viewBox="0 0 16 7"><use href="#car"/></svg>
     </div>
     <div class="checkered" aria-hidden="true"></div>
   </header>
@@ -47,19 +53,26 @@
         </select>
         <p class="helper-error" id="race-error" hidden>Couldn't load races.</p>
       </div>
-      <button type="submit" class="btn-primary" id="compare" disabled>
-        <span class="spinner" aria-hidden="true"></span><span id="compare-label">Compare</span>
-      </button>
-      <button type="button" id="reset" disabled>Reset</button>
 
-      <fieldset class="drivers" id="drivers">
+      <!-- Hidden until a Grand Prix's drivers have loaded -->
+      <fieldset class="drivers" id="drivers" hidden>
         <legend>Drivers — pick 2 to 6</legend>
-        <p class="count" id="driver-count"><span class="dot" aria-hidden="true"></span><span id="driver-count-text">0 selected</span></p>
+        <div class="driver-bar">
+          <p class="count" id="driver-count"><span class="dot" aria-hidden="true"></span><span id="driver-count-text">0 selected</span></p>
+          <button type="button" class="link-btn" id="clear-drivers" disabled>Clear drivers</button>
+        </div>
         <ul class="chip-list" id="driver-list"></ul>
-        <p class="placeholder" id="driver-placeholder">Select a Grand Prix to see its drivers.</p>
       </fieldset>
 
       <p class="input-msg" id="input-msg" role="alert"></p>
+
+      <!-- Actions come after the pickers, in the order they are used -->
+      <div class="actions">
+        <button type="submit" class="btn-primary" id="compare" disabled>
+          <span class="spinner" aria-hidden="true"></span><span id="compare-label">Compare</span>
+        </button>
+        <button type="button" id="reset" disabled>Reset</button>
+      </div>
     </form>
 
     <!-- 3. COMPARISON PANEL -->
@@ -73,12 +86,12 @@
       <p class="caption" id="caption" aria-live="polite">Loading the 2025 Grand Prix list…</p>
 
       <div class="results" id="results" hidden>
-        <p class="method">
-          Average lap time is <strong>computed on this page</strong> from OpenF1 <code>/laps</code> for this race only.
-          Excluded: pit-out laps, pit-in laps (from OpenF1 <code>/pit</code>), and laps with no recorded time.
-          Safety-car and weather-affected laps are still included.
-        </p>
+        <p class="method">Averages from this race only, skipping pit laps and safety car or red-flag laps.</p>
         <p class="partial-note" id="partial-note" hidden></p>
+
+        <!-- Side-by-side driver cards, fastest first. Photos: OpenF1 /drivers headshot_url. -->
+        <ol class="driver-cards" id="driver-cards" aria-label="Drivers side by side, fastest first"></ol>
+
         <div class="table-scroll">
           <table>
             <thead>
@@ -88,12 +101,27 @@
                 <th scope="col" class="num">Avg lap</th>
                 <th scope="col" class="num">Gap</th>
                 <th scope="col" class="num">Laps counted</th>
+                <th scope="col" class="num">Grid → Finish</th>
                 <th scope="col"><span class="muted">Detail</span></th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
           </table>
         </div>
+
+        <!-- Mock race: a simulation paced by each driver's fastest counted lap (not a replay) -->
+        <section class="mock-race" id="mock-race" aria-labelledby="mock-race-title" hidden>
+          <h2 id="mock-race-title">Mock race</h2>
+          <p class="method" id="mock-race-note"></p>
+          <div class="race-track">
+            <svg id="race-svg" role="img" aria-label="Simulated race"></svg>
+          </div>
+          <div class="race-bar">
+            <p class="race-lap" id="race-lap" aria-live="off">Lap 1 / 10</p>
+            <button type="button" id="race-play">Start</button>
+          </div>
+          <ol class="race-legend" id="race-legend" aria-label="Mock race order"></ol>
+        </section>
       </div>
     </section>
   </main>
@@ -101,8 +129,7 @@
   <div class="checkered" aria-hidden="true"></div>
   <footer>
     <div class="wrap">
-      Data by <a href="https://openf1.org" target="_blank" rel="noopener">OpenF1</a>.
-      Unofficial fan project, not affiliated with Formula 1.
+      Data by <a href="https://openf1.org" target="_blank" rel="noopener">OpenF1</a> · photos via formula1.com · unofficial fan project.
     </div>
   </footer>
 

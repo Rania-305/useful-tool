@@ -14,6 +14,7 @@
 | `--text-primary` | `#f5f5f5` | Headings and primary body text |
 | `--text-muted` | `#9a9a9a` | Secondary text, placeholder copy, captions |
 | `--checkered-black` / `--checkered-white` | `#000000` / `#ffffff` | The checkered-flag pattern used on section dividers and page transitions |
+| `--team` | per driver, from OpenF1 `team_colour` | Driver cards: a 4px left stripe plus a dark background tint (18% team colour mixed into `--bg-track`). Mock race: the body colour of each driver's pixel car (on the track and in its legend). Not hardcoded — read from the API; anything with no valid `team_colour` stays untinted (cars fall back to `--accent-red`) |
 
 ### Typography
 - Headings: a pixel/arcade display font (e.g. "Press Start 2P") — reinforces the retro racing-game vibe, used sparingly (titles only, not body copy, to stay readable).
@@ -22,7 +23,7 @@
 ### Spacing & Motion
 - Spacing scale: `4px / 8px / 16px / 24px / 32px / 48px`.
 - Transitions: `200ms ease` for hovers, `400ms ease` for page/section transitions, using a checkered-flag wipe rather than a plain fade.
-- A small pixelated race car animates across the hero area on load and during the loading state — this is the one place motion is always present; elsewhere motion is limited to transitions so the page doesn't feel busy.
+- A pack of five small pixelated race cars races across the hero strip on two lanes at different speeds (so they overtake each other), over a scrolling dashed lane divider in `--border-flag`. Hero car bodies are a deliberate exception to the token roles above: they may use any colour (currently `--accent-red`, `--accent-green`, `--accent-yellow`, `--text-primary`) for variety. The whole pack speeds up during the loading state. This is the one place motion is always present; elsewhere motion is limited to transitions so the page doesn't feel busy.
 
 ## Design Direction
 - This tool should be visually stunning and use dark elements to give a retro racing game vibe:
@@ -37,13 +38,15 @@ This page is for F1 fans — myself included — who want to compare drivers' ra
 ## Layout
 What a visitor sees, top to bottom:
 
-1. **First — Header/hero.** Page title and one-line description, a small pixel race car animating across the strip, and a checkered-flag divider underneath. This is the "visually stunning" first impression and confirms the page's purpose immediately.
-2. **Second — Controls bar.** Grand Prix selector, driver search/filter field, and the Compare button, laid out in a row. This is what the visitor interacts with before anything else can happen.
+1. **First — Header/hero.** Page title and one-line description, a pack of pixel race cars racing across the strip, and a checkered-flag divider underneath. This is the "visually stunning" first impression and confirms the page's purpose immediately.
+2. **Second — Controls.** In the order they're used, top to bottom: Grand Prix selector, then the driver picker (once a race is chosen), then the Compare and Reset buttons. This is what the visitor interacts with before anything else can happen. After a successful Compare, the page scrolls the comparison panel into view (instantly, not smoothly, when the visitor prefers reduced motion).
 3. **Third — Comparison panel.** The computed average-lap-time comparison table for the selected race, or the empty/loading/error graphic in that same space when there's nothing to show yet.
+
+4. **Fourth — Mock race** (In Use state only, at the bottom of the comparison panel). A pixel-car race on the selected circuit's outline: tarmac in `--border-flag` on `--bg-track`, a checkered start/finish line, one car per driver in its `--team` colour, a pixel-font lap counter in `--accent-yellow`, a Start/Replay button, and a legend. It starts when scrolled into view; with reduced motion turned on it waits for Start. The caption says plainly that it is a simulation paced by fastest laps, not a replay.
 
 A footer with the OpenF1 attribution link sits below the comparison panel.
 
-**On a phone,** everything stacks into a single column, full width: hero first (pixel car animation shrinks and slows to keep it smooth), then the controls stacked vertically in order (race selector, driver search, Compare button, each full-width for easy tapping), then the comparison panel below. The comparison table scrolls horizontally rather than shrinking its text unreadably small.
+**On a phone,** everything stacks into a single column, full width: hero first (the car pack shrinks to three cars and slows to keep it smooth), then the controls stacked vertically in order (race selector, driver search, Compare button, each full-width for easy tapping), then the comparison panel below. The comparison table scrolls horizontally rather than shrinking its text unreadably small.
 
 ## Components
 One entry per state (Empty, Loading, Error, Invalid Input, In Use), per the PRD.
@@ -54,7 +57,11 @@ One entry per state (Empty, Loading, Error, Invalid Input, In Use), per the PRD.
 - Loading: label becomes "Loading…", disabled, small spinner replaces the icon.
 - Error: label "Try Again", `--accent-red` border, enabled.
 - Invalid Input: disabled, border flashes `--accent-red` once to draw the eye to the bad field.
-- In Use: label "Compare", enabled, `--accent-yellow` on hover/focus.
+- In Use: label "Compare", enabled, `--accent-yellow` on hover/focus. While a race is selected but fewer than 2 drivers are picked, the label reads "Compare (pick N more)" and stays clickable so the Invalid Input state can still be reached.
+
+**Clear drivers (text button inside the driver picker)**
+- Styled as underlined `--text-muted` text, `--accent-yellow` on hover; not a boxed button, so it doesn't compete with Compare.
+- Enabled only when at least one driver is ticked and nothing is loading. Unticks every driver but keeps the selected Grand Prix (no reload); if results were showing, the panel returns to Empty.
 
 **Clear/Reset button**
 - Empty: disabled — nothing to clear.
